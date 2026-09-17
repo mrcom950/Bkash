@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ক্যাশ আউট - bKash</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background-color: #f4f4f4; display: flex; justify-content: center; }
+    .app-container { width: 100%; max-width: 414px; background: #fff; min-height: 100vh; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Bar Header */
+    .header { background-color: #e2136e; color: white; padding: 15px; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .header-back { color: white; text-decoration: none; font-size: 18px; cursor: pointer; }
+
+    /* Step Containers */
+    .step-page { display: none; flex: 1; flex-direction: column; }
+    .step-page.active { display: flex; }
+
+    /* Step 1 Styles */
+    .sub-tabs { display: flex; border-bottom: 2px solid #e2136e; background: #fff; }
+    .sub-tab { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: bold; color: #e2136e; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .sub-tab.inactive { color: #777; border-bottom: none; }
+    
+    .search-box-wrap { padding: 15px; }
+    .search-input-box { display: flex; align-items: center; background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 10px 12px; gap: 10px; }
+    .search-input-box input { border: none; outline: none; width: 100%; font-size: 14px; color: #333; }
+    
+    .qr-scan-btn { margin: 0 15px 15px; padding: 12px; border: 1px solid #e2136e; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #e2136e; font-weight: bold; font-size: 14px; cursor: pointer; }
+    
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px; margin-bottom: 20px; }
+    .option-card { border: 1px solid #eee; border-radius: 8px; padding: 15px; text-align: left; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.03); cursor: pointer; }
+    .option-card p { font-size: 13px; font-weight: bold; color: #333; }
+
+    .recent-section { background: #f9f9f9; flex: 1; padding: 15px; }
+    .section-title { font-size: 12px; color: #666; margin-bottom: 10px; }
+    .agent-item { display: flex; align-items: center; gap: 12px; background: #fff; padding: 12px; border-radius: 8px; cursor: pointer; }
+    .agent-avatar { width: 40px; height: 40px; border-radius: 50%; background: #7cd2cf; display: flex; align-items: center; justify-content: center; color: white; position: relative; }
+    .agent-avatar .star { position: absolute; top: 0; right: 0; background: #e2136e; color: white; border-radius: 50%; font-size: 8px; padding: 2px; }
+    .agent-info div { font-size: 13px; color: #333; font-weight: bold; }
+
+    /* 11-Digit Direct Cash Out Box */
+    .direct-cashout-box { display: none; text-align: center; padding: 50px 20px; background: #fff; flex: 1; flex-direction: column; align-items: center; }
+    .direct-cashout-text { font-size: 18px; color: #444; margin-bottom: 25px; font-weight: bold; }
+    .direct-cashout-btn { background: #e2136e; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(226, 19, 110, 0.2); }
+
+    /* Shared Agent Bar */
+    .selected-agent-bar { display: flex; align-items: center; gap: 12px; padding: 15px; border-bottom: 1px solid #eee; }
+
+    /* Amount Section */
+    .amount-section { text-align: center; padding: 30px 15px 15px; }
+    .amount-title { font-size: 13px; color: #666; margin-bottom: 10px; }
+    .amount-display { font-size: 32px; font-weight: bold; color: #e2136e; margin-bottom: 10px; }
+    .balance-info { font-size: 13px; color: #555; background: #f9f9f9; display: inline-block; padding: 4px 12px; border-radius: 15px; }
+    
+    .charge-info-box { margin: 15px; padding: 12px; background: #fff; border-top: 1px solid #eee; border-bottom: 1px solid #eee; font-size: 13px; color: #444; display: flex; align-items: center; gap: 8px; }
+    .charge-info-box .icon { color: #e2136e; }
+
+    /* Step 3 Summary Section */
+    .summary-cards { display: flex; justify-content: space-between; padding: 15px; background: #fff; border-bottom: 1px solid #eee; text-align: left; }
+    .summary-item label { display: block; font-size: 12px; color: #777; margin-bottom: 4px; }
+    .summary-item span { font-size: 14px; font-weight: bold; color: #333; }
+
+    /* Pin Input Area */
+    .pin-input-wrap { padding: 25px 20px; display: flex; align-items: center; gap: 15px; background: #fff; }
+    .pin-lock-icon { background: #e2136e; color: white; padding: 6px 8px; border-radius: 4px; font-size: 12px; }
+    .pin-input-field { border: none; outline: none; font-size: 16px; color: #333; width: 100%; }
+    .pin-input-field::placeholder { color: #aaa; }
+
+    /* Gray Pin Confirmation Bar */
+    .pin-confirm-bar { background: #8e8e8e; color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: auto; }
+
+    /* Light Gray Custom Numeric Keypad */
+    .light-keypad { background: #e9ecef; padding: 12px; }
+    .light-keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+    .light-key-btn { background: #f8f9fa; color: #495057; border: none; font-size: 26px; font-weight: bold; padding: 12px 0; border-radius: 6px; text-align: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .light-key-btn:active { background: #dee2e6; }
+    
+    .light-keypad-action-btn { background: #6c757d; color: white; border: none; font-size: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .light-keypad-action-btn.enter-btn { background: #6c757d; border-radius: 50%; width: 50px; height: 50px; margin: 0 auto; }
+
+    /* Step 4: Final Confirmation */
+    .confirm-details-box { display: flex; padding: 15px; background: #fafafa; border-bottom: 1px solid #eee; }
+    .confirm-col { flex: 1; }
+    .confirm-col label { display: block; font-size: 11px; color: #777; }
+    .confirm-col span { font-size: 14px; font-weight: bold; color: #333; }
+
+    .notice-box { margin: 15px; padding: 12px; background: #fff; border: 1px solid #eee; border-radius: 8px; font-size: 12px; color: #555; line-height: 1.5; display: flex; gap: 10px; }
+
+    /* Tap and Hold Button */
+    .tap-hold-container { margin-top: auto; background: #e2136e; color: white; text-align: center; padding: 25px 15px; border-top-left-radius: 50% 20px; border-top-right-radius: 50% 20px; cursor: pointer; user-select: none; position: relative; overflow: hidden; }
+    .tap-hold-container p { font-size: 15px; font-weight: bold; position: relative; z-index: 2; }
+    .progress-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #b00e54; transition: width 0.1s linear; }
+
+    .close-icon { font-size: 20px; cursor: pointer; color: white; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ==================== STEP 1: Select Agent ==================== -->
+  <div class="step-page active" id="step1">
+    <div class="header">
+      <div class="header-left">
+        <a href="home.html" class="header-back"><i class="fa-solid fa-arrow-left"></i></a>
+        <span>ক্যাশ আউট</span>
+      </div>
+      <i class="fa-solid fa-dove"></i>
+    </div>
+
+    <div class="sub-tabs">
+      <div class="sub-tab"><i class="fa-solid fa-store"></i> এজেন্ট</div>
+      <div class="sub-tab inactive"><i class="fa-solid fa-calculator"></i> এ টি এম</div>
+    </div>
+
+    <div class="search-box-wrap">
+      <div class="search-input-box">
+        <i class="fa-solid fa-magnifying-glass" style="color: #777;"></i>
+        <input type="number" id="agentInput" placeholder="এজেন্ট-এর নম্বর বা নাম দিন">
+      </div>
+    </div>
+
+    <div id="defaultList">
+      <div class="qr-scan-btn">
+        <i class="fa-solid fa-qrcode"></i> QR কোড স্ক্যান করতে ট্যাপ করুন
+      </div>
+
+      <div class="options-grid">
+        <div class="option-card">
+          <p style="color:#e2136e;">প্রিয় এজেন্ট</p>
+          <p style="margin-top:20px;">প্রিয় এজেন্ট</p>
+        </div>
+        <div class="option-card">
+          <p style="color:#2db7b5;">স্পেশাল</p>
+          <p style="margin-top:20px;">স্পেশাল ক্যাশ আউট</p>
+        </div>
+      </div>
+
+      <div class="recent-section">
+        <div class="section-title">সেভ করে রাখা এজেন্ট তালিকা</div>
+        <div class="agent-item" onclick="selectAgent('01867670784')">
+          <div class="agent-avatar">
+            <i class="fa-solid fa-store"></i>
+            <span class="star"><i class="fa-solid fa-star"></i></span>
+          </div>
+          <div class="agent-info">
+            <div>01867670784</div>
+            <div style="color:#777; font-weight:normal;">01867670784</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="direct-cashout-box" id="directCashoutBox">
+      <div class="direct-cashout-text">
+        <span id="typedNumber"></span> -এর থেকে ক্যাশ আউট করুন
+      </div>
+      <button class="direct-cashout-btn" onclick="proceedTypedNumber()">ক্যাশ আউট করতে ট্যাপ করুন</button>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 2: Input Amount ==================== -->
+  <div class="step-page" id="step2">
+    <div class="header">
+      <div class="header-left">
+        <i class="fa-solid fa-arrow-left header-back" onclick="goToStep(1)"></i>
+        <span>ক্যাশ আউট</span>
+      </div>
+      <i class="fa-solid fa-dove"></i>
+    </div>
+
+    <div class="selected-agent-bar">
+      <div class="agent-avatar">
+        <i class="fa-solid fa-store"></i>
+        <span class="star"><i class="fa-solid fa-star"></i></span>
+      </div>
+      <div class="agent-info">
+        <div id="selectedAgentNum">01867670784</div>
+        <div style="color:#777; font-weight:normal;" id="selectedAgentSub">01867670784</div>
+      </div>
+    </div>
+
+    <div class="amount-section">
+      <div class="amount-title">পরিমাণ</div>
+      <div class="amount-display">৳<span id="amountVal">100</span></div>
+      <div class="balance-info">ব্যবহারযোগ্য ব্যালেন্স: ৳১,৬০০.০০</div>
+    </div>
+
+    <div class="charge-info-box">
+      <i class="fa-solid fa-fire icon"></i>
+      <div>চার্জ হাজারে <strike>৳১৮.৫০</strike> <b>৳১৩.৯৫</b> <br><span style="font-size:11px; color:#666;">বাঁচবে ৳০.৪৬</span></div>
+    </div>
+
+    <div class="pin-confirm-bar" style="background: #e2136e;" onclick="submitAmount()">
+      <span>এগিয়ে যান</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 3: Input PIN (Updated as Image) ==================== -->
+  <div class="step-page" id="step3">
+    <div class="header">
+      <div class="header-left">
+        <i class="fa-solid fa-arrow-left header-back" onclick="goToStep(2)"></i>
+        <span>ক্যাশ আউট</span>
+      </div>
+      <i class="fa-solid fa-dove"></i>
+    </div>
+
+    <div class="selected-agent-bar">
+      <div class="agent-avatar">
+        <i class="fa-solid fa-store"></i>
+        <span class="star"><i class="fa-solid fa-star"></i></span>
+      </div>
+      <div class="agent-info">
+        <div class="displayAgentNum">01867670784</div>
+        <div style="color:#777; font-weight:normal;" class="displayAgentNum">01867670784</div>
+      </div>
+    </div>
+
+    <div class="summary-cards">
+      <div class="summary-item">
+        <label>পরিমাণ</label>
+        <span id="summaryAmount">৳100.00</span>
+      </div>
+      <div class="summary-item">
+        <label>চার্জ</label>
+        <span>+ ৳1.40</span>
+      </div>
+      <div class="summary-item">
+        <label>সর্বমোট</label>
+        <span id="summaryTotal">৳101.40</span>
+      </div>
+    </div>
+
+    <div class="pin-input-wrap">
+      <i class="fa-solid fa-lock pin-lock-icon"></i>
+      <input type="password" id="pinInput" class="pin-input-field" placeholder="পিন নম্বর দিন" readonly>
+    </div>
+
+    <div class="pin-confirm-bar" onclick="submitPin()">
+      <span>পিন কনফার্ম করুন</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </div>
+
+    <!-- Light Gray Custom Keypad matching Screen -->
+    <div class="light-keypad">
+      <div class="light-keypad-grid">
+        <button class="light-key-btn" onclick="pressPinKey('1')">1</button>
+        <button class="light-key-btn" onclick="pressPinKey('2')">2</button>
+        <button class="light-key-btn" onclick="pressPinKey('3')">3</button>
+        <button class="light-key-btn" onclick="pressPinKey('4')">4</button>
+        <button class="light-key-btn" onclick="pressPinKey('5')">5</button>
+        <button class="light-key-btn" onclick="pressPinKey('6')">6</button>
+        <button class="light-key-btn" onclick="pressPinKey('7')">7</button>
+        <button class="light-key-btn" onclick="pressPinKey('8')">8</button>
+        <button class="light-key-btn" onclick="pressPinKey('9')">9</button>
+        <button class="light-keypad-action-btn" onclick="pressPinKey('del')"><i class="fa-solid fa-xmark"></i></button>
+        <button class="light-key-btn" onclick="pressPinKey('0')">0</button>
+        <button class="light-keypad-action-btn enter-btn" onclick="submitPin()"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 4: Hold to Confirm ==================== -->
+  <div class="step-page" id="step4">
+    <div class="header">
+      <span style="font-size:16px;">ক্যাশ আউট নিশ্চিত করুন</span>
+      <i class="fa-solid fa-xmark close-icon" onclick="goToStep(1)"></i>
+    </div>
+
+    <div class="selected-agent-bar">
+      <div class="agent-avatar">
+        <i class="fa-solid fa-store"></i>
+      </div>
+      <div class="agent-info">
+        <div class="displayAgentNum">01867670784</div>
+        <div style="color:#777; font-weight:normal;" class="displayAgentNum">01867670784</div>
+      </div>
+    </div>
+
+    <div class="confirm-details-box">
+      <div class="confirm-col">
+        <label>সর্বমোট</label>
+        <span id="finalTotal">৳101.40</span>
+        <div style="font-size:11px; color:#777; margin-top:2px;" id="finalBreakdown">৳100.00 + ৳1.40</div>
+      </div>
+      <div class="confirm-col">
+        <label>নতুন ব্যালেন্স</label>
+        <span id="newBalance">৳1,498.60</span>
+      </div>
+    </div>
+
+    <div class="notice-box">
+      <i class="fa-solid fa-book-open" style="color:#e2136e; font-size:18px;"></i>
+      <div>প্রিয় এজেন্ট নম্বর থেকে প্রতি মাসে ৫০,০০০ টাকা পর্যন্ত ক্যাশ আউট করুন ১৩.৯৫ টাকা/হাজার চার্জে।</div>
+    </div>
+
+    <div class="tap-hold-container" id="holdBtn" onmousedown="startHold()" onmouseup="endHold()" onmouseleave="endHold()" ontouchstart="startHold()" ontouchend="endHold()">
+      <div class="progress-fill" id="progressFill"></div>
+      <p>ক্যাশ আউট করতে ট্যাপ করে ধরে রাখুন</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentAmount = "100";
+  let currentPin = "";
+  let holdTimer = null;
+  let holdProgress = 0;
+
+  const agentInput = document.getElementById('agentInput');
+  const defaultList = document.getElementById('defaultList');
+  const directCashoutBox = document.getElementById('directCashoutBox');
+  const typedNumber = document.getElementById('typedNumber');
+
+  agentInput.addEventListener('input', function() {
+    const val = agentInput.value.trim();
+    if (val.length === 11) {
+      typedNumber.innerText = val;
+      defaultList.style.display = 'none';
+      directCashoutBox.style.display = 'flex';
+    } else {
+      defaultList.style.display = 'block';
+      directCashoutBox.style.display = 'none';
+    }
+  });
+
+  function proceedTypedNumber() {
+    const val = agentInput.value.trim();
+    if (val.length === 11) selectAgent(val);
+  }
+
+  function goToStep(stepNumber) {
+    document.querySelectorAll('.step-page').forEach(page => page.classList.remove('active'));
+    document.getElementById('step' + stepNumber).classList.add('active');
+  }
+
+  function selectAgent(number) {
+    document.getElementById('selectedAgentNum').innerText = number;
+    document.getElementById('selectedAgentSub').innerText = number;
+    document.querySelectorAll('.displayAgentNum').forEach(el => el.innerText = number);
+    goToStep(2);
+  }
+
+  function submitAmount() {
+    const amt = parseFloat(currentAmount);
+    if (amt <= 0 || isNaN(amt)) return;
+
+    const charge = (amt * 0.014).toFixed(2);
+    const total = (amt + parseFloat(charge)).toFixed(2);
+    const newBal = (1600 - total).toFixed(2);
+
+    document.getElementById('summaryAmount').innerText = '৳' + amt.toFixed(2);
+    document.getElementById('summaryTotal').innerText = '৳' + total;
+    document.getElementById('finalTotal').innerText = '৳' + total;
+    document.getElementById('finalBreakdown').innerText = `৳${amt.toFixed(2)} + ৳${charge}`;
+    document.getElementById('newBalance').innerText = '৳' + newBal;
+
+    goToStep(3);
+  }
+
+  function pressPinKey(key) {
+    if (key === 'del') {
+      currentPin = currentPin.slice(0, -1);
+    } else {
+      if (currentPin.length < 5) currentPin += key;
+    }
+    document.getElementById('pinInput').value = currentPin;
+  }
+
+  function submitPin() {
+    if (currentPin.length >= 4) {
+      goToStep(4);
+    } else {
+      alert("সঠিক পিন নাম্বার দিন");
+    }
+  }
+
+  function startHold() {
+    const fill = document.getElementById('progressFill');
+    holdProgress = 0;
+    holdTimer = setInterval(() => {
+      holdProgress += 5;
+      fill.style.width = holdProgress + "%";
+      if (holdProgress >= 100) {
+        clearInterval(holdTimer);
+        alert("ক্যাশ আউট সফল হয়েছে!");
+        window.location.href = "inbox.html";
+      }
+    }, 50);
+  }
+
+  function endHold() {
+    clearInterval(holdTimer);
+    holdProgress = 0;
+    document.getElementById('progressFill').style.width = "0%";
+  }
+</script>
+
+</body>
+</html>
+a

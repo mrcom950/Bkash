@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bKash Home</title>
+<link rel="stylesheet" href="style.css">
+<!-- FontAwesome CDN -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<!-- Firebase SDKs (Compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* --- Global Reset --- */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+}
+
+html, body {
+    background-color: #e2136e;
+}
+
+body { 
+    background-color: #f5f5f5; 
+    padding-bottom: 90px; 
+    overflow-x: hidden; 
+}
+
+/* ===== HEADER ===== */
+.header {
+    position: relative;
+    height: 190px;
+    overflow: hidden;
+}
+
+.header-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url('assets/header.png');
+    background-size: 100% 100%;
+    background-position: top center;
+    background-repeat: no-repeat;
+    background-color: #e2136e;
+    z-index: 0;
+}
+
+.header-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(180, 0, 80, 0.15) 0%,
+        rgba(140, 0, 60, 0.40) 100%
+    );
+}
+
+.header-content { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    position: relative; 
+    z-index: 2;
+    padding: 38px 15px 0 15px;
+}
+
+.user-profile-section { display: flex; align-items: center; gap: 10px; }
+
+.profile-logo {
+    width: 50px; height: 50px; 
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: bold; 
+    background: rgba(255,255,255,0.20);
+    color: #fff;
+}
+
+.user-info-text { display: flex; flex-direction: column; gap: 6px; }
+
+.user-id { 
+    font-size: 14px; font-weight: 600; color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.balance-container {
+    background: white; 
+    height: 34px; min-width: 155px;
+    border-radius: 25px; 
+    display: flex; align-items: center; 
+    padding: 0 12px 0 5px; 
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    gap: 7px;
+}
+
+.bkash-logo-circle {
+    background: #e2136e; color: white; 
+    width: 24px; height: 24px;
+    border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: bold; flex-shrink: 0;
+}
+
+.balance-text { 
+    font-size: 13px; font-weight: 600; color: #222;
+    transition: opacity 0.2s ease;
+}
+
+.header-icons { display: flex; gap: 10px; align-items: center; }
+
+.search-icon-circle { 
+    background: white; width: 42px; height: 42px; 
+    border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    cursor: pointer;
+}
+
+.bird-menu-container {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer;
+}
+
+.bird-circle {
+    background: #ffffff; width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+.bird-circle img { width: 100%; height: auto; object-fit: contain; }
+
+.menu-dots {
+    display: flex; gap: 3px;
+    background: rgba(255,255,255,0.25);
+    padding: 3px 7px; border-radius: 10px;
+}
+
+.menu-dots span { width: 4px; height: 4px; background: white; border-radius: 50%; display: block; }
+
+/* ===== MAIN CARD ===== */
+.main-card {
+    background: white; 
+    margin: -45px 10px 12px; 
+    border-radius: 18px;
+    padding: 22px 10px 12px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+    position: relative; z-index: 5;
+}
+
+.menu-grid { 
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 0; 
+}
+
+.menu-item { 
+    text-align: center; text-decoration: none; color: #333; 
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+
+.menu-item img { width: 52px; height: 52px; object-fit: contain; }
+
+.menu-item p { font-size: 11px; font-weight: 600; color: #333; white-space: nowrap; }
+
+.more-btn-container { 
+    text-align: center; margin-top: 14px; 
+    border-top: 1px solid #f0f0f0; padding-top: 10px; 
+}
+
+.more-btn { 
+    background: none; border: none; color: #e2136e; 
+    font-size: 13px; font-weight: 700; cursor: pointer;
+}
+
+/* ===== SLIDER ===== */
+.slider-container { 
+    margin: 4px 10px 12px; border-radius: 14px; 
+    height: 105px; position: relative; overflow: hidden; background: #c9105c;
+}
+
+.slider-wrapper { 
+    display: flex; width: 300%; height: 100%; 
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+.slide { width: 100%; height: 100%; }
+.slide img { width: 100%; height: 100%; object-fit: cover; }
+
+.dots-container { 
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; 
+}
+
+.dot { 
+    width: 7px; height: 7px; background: rgba(255,255,255,0.55); 
+    border-radius: 50%; transition: 0.3s; cursor: pointer;
+}
+
+.dot.active { background: #fff; width: 20px; border-radius: 10px; }
+
+/* ===== OFFERS ===== */
+.offers-container {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin: 4px 10px 20px;
+}
+
+.offer-card {
+    border-radius: 14px; padding: 16px 6px 14px; min-height: 115px; 
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.15s;
+}
+
+.offer-card:active { transform: scale(0.96); }
+.offer-card img { width: 44px; height: 44px; }
+.offer-card p { font-size: 10px; font-weight: 700; color: #222; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 90px;
+    border-top: 1px solid #ececec;
+    z-index: 1000;
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.06);
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #888;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.nav-item.active { color: #e2136e; }
+.nav-item img.nav-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+.balance-text.fade { opacity: 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-bg" style="background-image: url('assets/header.png');"></div>
+  <div class="header-content">
+
+    <div class="user-profile-section">
+      <div class="profile-logo" id="profileInitial">0</div>
+      <div class="user-info-text">
+        <div class="user-id" id="userPhone">01345511989</div>
+        <div class="balance-container" id="balanceBtn">
+          <div class="bkash-logo-circle">৳</div>
+          <span class="balance-text" id="balanceText">ব্যালেন্স দেখুন</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-icons">
+      <div class="search-icon-circle"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <div class="bird-menu-container">
+        <div class="bird-circle">
+          <img src="assets/birds.png" alt="Birds">
+        </div>
+        <div class="menu-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MAIN CARD -->
+<div class="main-card">
+  <div class="menu-grid">
+    <a href="sendmoney.html" class="menu-item"><img src="assets/sendmoney.png" alt="Send Money"><p>সেন্ড মানি</p></a>
+    <a href="recharge.html" class="menu-item"><img src="assets/recharge.png" alt="Recharge"><p>মোবাইল রিচার্জ</p></a>
+    <a href="cashout.html" class="menu-item"><img src="assets/cashout.png" alt="Cashout"><p>ক্যাশ আউট</p></a>
+    <a href="payment.html" class="menu-item"><img src="assets/payment.png" alt="Payment"><p>পেমেন্ট</p></a>
+    <a href="addmoney.html" class="menu-item"><img src="assets/addmoney.png" alt="Add Money"><p>অ্যাড মানি</p></a>
+    <a href="paybill.html" class="menu-item"><img src="assets/paybill.png" alt="Pay Bill"><p>পে বিল</p></a>
+    <a href="savings.html" class="menu-item"><img src="assets/savings.png" alt="Savings"><p>সেভিংস</p></a>
+    <a href="loan.html" class="menu-item"><img src="assets/loan.png" alt="Loan"><p>লোন</p></a>
+  </div>
+
+  <div class="more-btn-container">
+    <button class="more-btn">আরো দেখুন <span>⌵</span></button>
+  </div>
+</div>
+
+<!-- SLIDER -->
+<div class="slider-container">
+  <div class="slider-wrapper" id="slider">
+    <div class="slide"><img src="assets/slide1.png" alt="Banner 1" onerror="this.src='https://via.placeholder.com/350x120?text=bKash+Offer+1'"></div>
+    <div class="slide"><img src="assets/slide2.png" alt="Banner 2" onerror="this.src='https://via.placeholder.com/350x120?text=bKash+Offer+2'"></div>
+    <div class="slide"><img src="assets/slide3.png" alt="Banner 3" onerror="this.src='https://via.placeholder.com/350x120?text=bKash+Offer+3'"></div>
+  </div>
+
+  <div class="dots-container">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+</div>
+
+<!-- OFFERS -->
+<div class="offers-container">
+  <div class="offer-card">
+    <img src="https://img.icons8.com/color/96/gift--v1.png" alt="Offers">
+    <p>মাই অফারস</p>
+  </div>
+  <div class="offer-card">
+    <img src="https://img.icons8.com/color/96/discount--v1.png" alt="Coupons">
+    <p>কুপন</p>
+  </div>
+  <div class="offer-card">
+    <img src="https://img.icons8.com/color/96/trophy.png" alt="Rewards">
+    <p>রিওয়ার্ডস</p>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <a href="home.html" class="nav-item active">
+    <img src="assets/home_brn.png" alt="হোম" class="nav-icon">
+    <span>হোম</span>
+  </a>
+  <a href="mybkash.html" class="nav-item">
+    <img src="assets/my_bkash.png" alt="আমার বিকাশ" class="nav-icon">
+    <span>আমার বিকাশ</span>
+  </a>
+  <a href="admin.html" class="nav-item scan-btn">
+    <img src="assets/qr_code.png" alt="QR স্ক্যান" class="nav-icon qr-icon">
+    <span>QR স্ক্যান</span>
+  </a>
+  <a href="inbox.html" class="nav-item">
+    <img src="assets/inbox.png" alt="ইনবক্স" class="nav-icon">
+    <span>ইনবক্স</span>
+  </a>
+</div>
+
+<!-- Firebase Modular Script -->
+<script type="module">
+  import { db, auth } from './firebase.js';
+  console.log("Firebase loaded successfully in home.html");
+</script>
+
+<!-- script.js লিঙ্ক -->
+<script src="script.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Phone number & Profile Initial setup
+    const userPhone = localStorage.getItem('userPhone') || "01345511989";
+    document.getElementById('userPhone').textContent = userPhone;
+    document.getElementById('profileInitial').textContent = userPhone.charAt(userPhone.length - 1);
+
+    // 2. Balance Toggle Logic
+    let isShowing = false;
+    const balanceBtn = document.getElementById('balanceBtn');
+    const balanceText = document.getElementById('balanceText');
+
+    balanceBtn.addEventListener('click', () => {
+      if (isShowing) return;
+      isShowing = true;
+
+      balanceText.style.opacity = '0';
+      setTimeout(() => {
+        const formattedBal = typeof getFormattedBalance === 'function' 
+          ? getFormattedBalance() 
+          : parseFloat(localStorage.getItem('userBalance') || 5000.00).toLocaleString('en-US', {minimumFractionDigits: 2});
+        
+        balanceText.innerText = "৳ " + formattedBal; 
+        balanceText.style.opacity = '1';
+      }, 200);
+
+      setTimeout(() => {
+        balanceText.style.opacity = '0';
+        setTimeout(() => {
+          balanceText.innerText = "ব্যালেন্স দেখুন";
+          balanceText.style.opacity = '1';
+          isShowing = false;
+        }, 200);
+      }, 3000);
+    });
+
+    // 3. Banner Slider Logic
+    let slideIndex = 0;
+    const sliderWrapper = document.getElementById('slider');
+    const dots = document.querySelectorAll('.dot');
+
+    function moveSlide() {
+      slideIndex++;
+      if (slideIndex >= 3) slideIndex = 0;
+      if (sliderWrapper) {
+        sliderWrapper.style.transform = `translateX(-${slideIndex * (100 / 3)}%)`;
+        dots.forEach(dot => dot.classList.remove('active'));
+        if (dots[slideIndeuqx]) dots[slideIndex].classList.add('active');
+      }
+    }
+    setInterval(moveSlide, 3500);
+  });
+</script>
+
+</body>
+</html>

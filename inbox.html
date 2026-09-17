@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ইনবক্স - bKash UI Clone</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background-color: #f4f4f4; display: flex; justify-content: center; }
+    .app-container { width: 100%; max-width: 414px; background: #ffffff; min-height: 100vh; position: relative; display: flex; flex-direction: column; padding-bottom: 60px; }
+
+    /* Header */
+    .header { background-color: #e2136e; color: white; padding: 15px; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
+    .header-back { color: white; text-decoration: none; font-size: 18px; }
+    .header-circle { width: 24px; height: 24px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 1px solid #ddd; background: #fff; position: sticky; top: 51px; z-index: 9; }
+    .tab { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: bold; color: #666; cursor: pointer; }
+    .tab.active { color: #e2136e; border-bottom: 3px solid #e2136e; }
+
+    /* Search Container */
+    .search-filter-container { display: flex; padding: 12px; gap: 10px; background: #fff; position: sticky; top: 96px; z-index: 8; border-bottom: 1px solid #eee; }
+    .search-box { flex: 1; display: flex; align-items: center; background: #f0f0f0; border-radius: 20px; padding: 6px 12px; border: 1px solid #e0e0e0; }
+    .search-box i { color: #777; margin-right: 8px; }
+    .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 13px; }
+    .filter-btn { border: 1px solid #e2136e; color: #e2136e; padding: 6px 14px; border-radius: 20px; font-size: 13px; background: #fff; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+
+    /* Content */
+    .tab-content { display: none; flex: 1; }
+    .tab-content.active { display: block; }
+
+    /* Transaction List */
+    .trx-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .trx-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; margin-right: 12px; }
+    .bg-teal { background-color: #8ed0d0; }
+    .bg-purple { background-color: #bfa1d9; }
+    .trx-details { flex: 1; }
+    .trx-title { font-weight: bold; font-size: 14px; color: #333; }
+    .trx-number { font-size: 13px; color: #555; margin-top: 2px; }
+    .trx-id { font-size: 12px; color: #888; margin-top: 2px; }
+    .trx-amount-container { text-align: right; }
+    .trx-amount { font-weight: bold; font-size: 14px; }
+    .trx-amount.red { color: #d9383a; }
+    .trx-amount.green { color: #008a5e; }
+    .trx-time { font-size: 11px; color: #777; margin-top: 4px; }
+    .trx-arrow { color: #aaa; margin-left: 8px; font-size: 12px; }
+
+    /* Notifications */
+    .notification-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 12px; }
+    .notification-icon { width: 40px; height: 40px; border-radius: 50%; background: #e2136e; color: white; display: flex; align-items: center; justify-content: center; }
+    .notification-text h4 { font-size: 14px; color: #333; }
+    .notification-text p { font-size: 12px; color: #666; margin-top: 4px; }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav { 
+      position: fixed; 
+      bottom: 0; 
+      width: 100%; 
+      max-width: 414px; 
+      height: 60px; 
+      background: #fff; 
+      display: flex; 
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #ddd; 
+      z-index: 100; 
+    }
+
+    .nav-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 11px; 
+      color: #666; 
+      text-decoration: none; 
+      font-weight: bold;
+    }
+
+    .nav-item.active span { 
+      color: #e2136e; 
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      margin-bottom: 3px;
+    }
+
+    .nav-icon.qr-icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    /* Modal / Bottom Sheet Popup */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 1000; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-content { width: 100%; max-width: 414px; background: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; transform: translateY(100%); transition: transform 0.3s ease; }
+    .modal-overlay.active .modal-content { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+    .modal-title { font-size: 16px; font-weight: bold; color: #333; }
+    .modal-close { color: #e2136e; cursor: pointer; font-size: 14px; font-weight: bold; }
+    .modal-body { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 10px; padding: 20px 0; }
+    .info-group label { display: block; font-size: 12px; color: #777; margin-bottom: 4px; }
+    .info-group span { font-size: 13px; color: #333; font-weight: 500; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 10px; }
+    .action-btn { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #e2136e; background: white; color: #e2136e; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="header">
+    <a href="home.html" class="header-back"><i class="fa-solid fa-arrow-left"></i></a>
+    <span>ইনবক্স</span>
+    <div class="header-circle"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">লেনদেনসমূহ</div>
+    <div class="tab" onclick="switchTab(1)">নোটিফিকেশন</div>
+  </div>
+
+  <!-- Transaction Tab Content -->
+  <div class="tab-content active" id="trxTab">
+    <div class="search-filter-container">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" onkeyup="filterTransactions()" placeholder="TrxID বা নাম্বার দিয়ে খুঁজুন">
+      </div>
+      <button class="filter-btn">
+        <i class="fa-solid fa-gear"></i> ফিল্টার
+      </button>
+    </div>
+
+    <!-- Container for dynamic transactions -->
+    <div id="trxListContainer">
+      <!-- Static Default Data -->
+      <div class="trx-item" onclick="openModal('সেন্ড মানি', '01952126397', '04:04am 13/09/26', '- ৳1990.00', '৳0.00', 'DHN6Q94GFG')">
+        <div class="trx-icon bg-purple">1</div>
+        <div class="trx-details">
+          <div class="trx-title">সেন্ড মানি</div>
+          <div class="trx-number">01952126397</div>
+          <div class="trx-id">TrxID : DHN6Q94GFG</div>
+        </div>
+        <div class="trx-amount-container">
+          <div class="trx-amount red">- ৳1990.00</div>
+          <div class="trx-time">04:04 am 13/09/26</div>
+        </div>
+        <i class="fa-solid fa-chevron-right trx-arrow"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Tab Content -->
+  <div class="tab-content" id="notifTab">
+    <div class="notification-item">
+      <div class="notification-icon"><i class="fa-solid fa-bell"></i></div>
+      <div class="notification-text">
+        <h4>নতুন ক্যাশব্যাক অফার!</h4>
+        <p>মোবাইল রিচার্জে পাচ্ছেন ১০% ক্যাশব্যাক। আজই চেষ্টা করুন।</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <a href="home.html" class="nav-item">
+      <img src="assets/home_brn.png" alt="হোম" class="nav-icon">
+      <span>হোম</span>
+    </a>
+    <a href="mybkash.html" class="nav-item">
+      <img src="assets/my_bkash.png" alt="আমার বিকাশ" class="nav-icon">
+      <span>আমার বিকাশ</span>
+    </a>
+    <a href="screen.html" class="nav-item scan-btn">
+      <img src="assets/qr_code.png" alt="QR স্ক্যান" class="nav-icon qr-icon">
+      <span>QR স্ক্যান</span>
+    </a>
+    <a href="inbox.html" class="nav-item active">
+      <img src="assets/inbox.png" alt="ইনবক্স" class="nav-icon">
+      <span>ইনবক্স</span>
+    </a>
+  </div>
+
+  <!-- Modal Popup Sheet -->
+  <div class="modal-overlay" id="trxModal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title" id="mType">সেন্ড মানি</span>
+        <span class="modal-close" onclick="closeModal()">বন্ধ</span>
+      </div>
+      <div class="modal-body">
+        <div class="info-group">
+          <label>একাউন্ট</label>
+          <span id="mAccount">--</span>
+        </div>
+        <div class="info-group">
+          <label>সময়</label>
+          <span id="mTime">--</span>
+        </div>
+        <div class="info-group">
+          <label>পরিমাণ</label>
+          <span id="mAmount">--</span>
+        </div>
+        <div class="info-group">
+          <label>চার্জ</label>
+          <span id="mCharge">৳0.00</span>
+        </div>
+        <div class="info-group" style="grid-column: span 2;">
+          <label>ট্রানজেকশন আইডি</label>
+          <span id="mTrxId">--</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn">
+          <i class="fa-solid fa-repeat"></i> আবার করুন
+        </button>
+        <button class="action-btn">
+          <i class="fa-solid fa-share-nodes"></i> শেয়ার
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase SDK (App, Firestore, and Auth) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+  // আপনার দেয়া ফায়ারবেস কনফিগারেশন
+  const firebaseConfig = {
+    apiKey: "AIzaSyCM9gCd38eJg3AM1j58R1_dylF2KkvZRfA",
+    authDomain: "bkash-727c2.firebaseapp.com",
+    projectId: "bkash-727c2",
+    storageBucket: "bkash-727c2.firebasestorage.app",
+    messagingSenderId: "1056984290374",
+    appId: "1:1056984290374:web:e74c5180d12fe12671e647",
+    measurementId: "G-547CWLL152"
+  };
+
+  // ফায়ারবেস ইনিশিয়াল করা
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  // Tab & Modal logic
+  function openModal(type, account, time, amount, charge, trxId) {
+    document.getElementById('mType').innerText = type;
+    document.getElementById('mAccount').innerText = account;
+    document.getElementById('mTime').innerText = time;
+    document.getElementById('mAmount').innerText = amount;
+    document.getElementById('mCharge').innerText = charge;
+    document.getElementById('mTrxId').innerText = trxId;
+    document.getElementById('trxModal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('trxModal').classList.remove('active');
+  }
+
+  function switchTab(index) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach((tab, i) => {
+      if (i === index) {
+        tab.classList.add('active');
+        contents[i].classList.add('active');
+      } else {
+        tab.classList.remove('active');
+        contents[i].classList.remove('active');
+      }
+    });
+  }
+
+  function filterTransactions() {
+    const input = document.getElementById('searchInput').value.toUpperCase().trim();
+    const items = document.querySelectorAll('.trx-item');
+    items.forEach(item => {
+      const numberElement = item.querySelector('.trx-number');
+      const trxIdElement = item.querySelector('.trx-id');
+      const numberText = numberElement ? numberElement.innerText.toUpperCase() : '';
+      const trxIdText = trxIdElement ? trxIdElement.innerText.toUpperCase() : '';
+
+      if (numberText.includes(input) || trxIdText.includes(input)) {
+        item.style.display = "flex";
+      } else {
+        item.style.display = "none";
+      }
+    });
+  }
+
+  // Transaction HTML Template Maker
+  function renderTrxItem(trx) {
+    const isCashIn = trx.type === 'ক্যাশ ইন';
+    const iconLetter = isCashIn ? '৳' : (trx.number ? trx.number.charAt(0) : '0');
+    const bgClass = isCashIn ? 'bg-purple' : (iconLetter === '0' ? 'bg-teal' : 'bg-purple');
+    const amountPrefix = isCashIn ? '+ ৳' : '- ৳';
+    const amountClass = isCashIn ? 'green' : 'red';
+    const parsedAmount = parseFloat(trx.amount || 0).toFixed(2);
+
+    return `
+      <div class="trx-item" onclick="openModal('${trx.type || 'সেন্ড মানি'}', '${trx.number || ''}', '${trx.time || ''}', '${amountPrefix}${parsedAmount}', '৳0.00', '${trx.trxId || ''}')">
+        <div class="trx-icon ${bgClass}">${iconLetter}</div>
+        <div class="trx-details">
+          <div class="trx-title">${trx.type || 'সেন্ড মানি'}</div>
+          <div class="trx-number">${trx.number || ''}</div>
+          <div class="trx-id">TrxID : ${trx.trxId || ''}</div>
+        </div>
+        <div class="trx-amount-container">
+          <div class="trx-amount ${amountClass}">${amountPrefix}${parsedAmount}</div>
+          <div class="trx-time">${trx.time || ''}</div>
+        </div>
+        <i class="fa-solid fa-chevron-right trx-arrow"></i>
+      </div>
+    `;
+  }
+
+  // Load from LocalStorage & Firestore Database
+  function loadAllTransactions() {
+    const container = document.getElementById('trxListContainer');
+    
+    // 1. LocalStorage Data Load
+    const storedTrx = JSON.parse(localStorage.getItem('userTransactions')) || [];
+    storedTrx.forEach(trx => {
+      container.insertAdjacentHTML('afterbegin', renderTrxItem(trx));
+    });
+
+    // 2. Firestore Realtime Listener Load
+    db.collection("userTransactions").onSnapshot((snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const data = change.doc.data();
+          container.insertAdjacentHTML('afterbegin', renderTrxItem(data));
+        }
+      });
+    });
+  }
+
+  window.onload = loadAllTransactions;
+</script>
+
+</body>
+</html>

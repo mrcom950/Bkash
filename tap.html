@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Send Money Confirm</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+body { background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+.container { width: 100%; max-width: 414px; background: #fff; min-height: 100vh; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+
+/* Top Section */
+.top-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.title { color: #e2136e; font-size: 18px; font-weight: 600; }
+.close-btn { font-size: 20px; color: #333; cursor: pointer; text-decoration: none; }
+
+/* User Info */
+.user-card { display: flex; align-items: center; gap: 12px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+.avatar { width: 45px; height: 45px; background: #b2dfdb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #00796b; font-size: 18px; }
+.user-details h4 { font-size: 15px; color: #333; }
+.user-details p { font-size: 13px; color: #666; }
+
+/* Amount Box */
+.amount-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+.box-item label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+.box-item .val { font-size: 16px; font-weight: 600; color: #222; }
+.box-item .sub-val { font-size: 12px; color: #666; margin-top: 2px; }
+
+/* Notice */
+.notice-box { background: #fff0f5; border: 1px solid #f8bbd0; border-radius: 10px; padding: 12px; display: flex; gap: 10px; align-items: center; margin-top: 20px; }
+.notice-box i { color: #e2136e; font-size: 20px; }
+.notice-box p { font-size: 12px; color: #444; line-height: 1.4; }
+
+/* ===== হোল্ড বাটন কন্টেইনার ===== */
+.hold-area {
+    position: relative;
+    width: calc(100% + 30px);
+    margin-left: -25px;
+    margin-bottom: -25px;
+    height: 130px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+#progressArc {
+    fill: none;
+    stroke: #e2136e;             /* প্রোগ্রেস লাইনের সাদা কালার */
+    stroke-width: 8;             /* লাইনের পুরুত্ব/চিকন সাইজ */
+    stroke-linecap: round;       /* লাইনের মাথা গোল রাখার জন্য */
+    stroke-dasharray: 410;       /* লাইনের মোট দৈর্ঘ্য (ভ্যালু যা-ই থাকুক) */
+    stroke-dashoffset: 410;      /* শুরুতে অদৃশ্য রাখতে ড্যাশঅফসেট সমান রাখা হয়েছে */
+    transition: stroke-dashoffset 0.07s linear;
+}
+
+
+  
+
+/* SVG Arc Overlay */
+.arc-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* বিষয়বস্তু (টেক্সট ও লোগো) */
+.hold-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 25px;
+}
+.hold-content img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+.hold-text {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div>
+    <div class="top-row">
+      <span class="title">সেন্ড মানি নিশ্চিত করুন</span>
+      <a href="home.html" class="close-btn"><i class="fa-solid fa-xmark"></i></a>
+    </div>
+
+    <div class="user-card">
+      <div class="avatar" id="initialLogo">0</div>
+      <div class="user-details">
+        <h4 id="recipientPhone">01345511989</h4>
+        <p id="recipientName">01345511989</p>
+      </div>
+    </div>
+
+    <div class="amount-box">
+      <div class="box-item">
+        <label>সর্বমোট</label>
+        <div class="val" id="totalAmount">৳ 105.00</div>
+        <div class="sub-val" id="breakdownAmount">৳ 100.00 + ৳ 5.00</div>
+      </div>
+      <div class="box-item">
+        <label>নতুন ব্যালেন্স</label>
+        <div class="val" id="newBalance">৳ 1,495.00</div>
+      </div>
+    </div>
+
+    <div class="notice-box">
+      <i class="fa-solid fa-gift"></i>
+      <p>আপনি প্রিয় নম্বর যোগ করে মাসে ২৫,০০০ টাকা পর্যন্ত চার্জ ছাড়া সেন্ড মানি করতে পারবেন।</p>
+    </div>
+  </div>
+
+  <!-- হোল্ড বাটন -->
+  <div class="hold-area" id="holdBtn">
+    <svg class="arc-svg" viewBox="0 0 400 120" preserveAspectRatio="none">
+      <!-- মূল পিংক ব্যাকগ্রাউন্ড -->
+      <path d="M 0,120 L 0,45 Q 200,5 400,45 L 400,120 Z" fill="#e2136e" />
+      
+      <!-- পিংকের আরও ওপরে থাকা ব্যাকগ্রাউন্ড ট্র্যাক -->
+      <path d="M 10,22 Q 200,-15 390,22" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="4" stroke-linecap="round" />
+      
+      <!-- পিংকের ওপরের সাদা অ্যানিমেটেড প্রোগ্রেস লাইন -->
+      <path id="progressArc" d="M 10,22 Q 200,-15 390,22" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-dasharray="410" stroke-dashoffset="410" />
+    </svg>
+
+    <div class="hold-content">
+      <img src="assets/birds.png" alt="Icon">
+      <span class="hold-text">সেন্ড মানি করতে ট্যাপ করে ধরে রাখুন</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const holdBtn = document.getElementById('holdBtn');
+  const progressArc = document.getElementById('progressArc');
+  
+  const maxDash = 410;
+  let currentOffset = maxDash;
+  let holdInterval;
+  let isCompleted = false;
+
+  function startHold(e) {
+    if (isCompleted) return;
+    e.preventDefault();
+
+    holdInterval = setInterval(() => {
+      currentOffset -= 8;
+      if (currentOffset <= 0) {
+        currentOffset = 0;
+        progressArc.style.strokeDashoffset = currentOffset;
+        clearInterval(holdInterval);
+        isCompleted = true;
+
+        setTimeout(() => {
+          alert('সেন্ড মানি সফল হয়েছে!');
+          window.location.href = "home.html";
+        }, 300);
+      } else {
+        progressArc.style.strokeDashoffset = currentOffset;
+      }
+    }, 20);
+  }
+
+  function stopHold() {
+    if (isCompleted) return;
+    clearInterval(holdInterval);
+
+    let resetInterval = setInterval(() => {
+      currentOffset += 15;
+      if (currentOffset >= maxDash) {
+        currentOffset = maxDash;
+        progressArc.style.strokeDashoffset = currentOffset;
+        clearInterval(resetInterval);
+      } else {
+        progressArc.style.strokeDashoffset = currentOffset;
+      }
+    }, 10);
+  }
+
+  holdBtn.addEventListener('mousedown', startHold);
+  holdBtn.addEventListener('mouseup', stopHold);
+  holdBtn.addEventListener('mouseleave', stopHold);
+
+  holdBtn.addEventListener('touchstart', startHold);
+  holdBtn.addEventListener('touchend', stopHold);
+</script>
+
+</body>
+</html>
+tyle
